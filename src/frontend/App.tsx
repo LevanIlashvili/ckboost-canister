@@ -8,17 +8,19 @@ function App() {
   const [name, setName] = useState<string>('');
   const [unauthenticatedAgent, setUnauthenticatedAgent] = useState<HttpAgent | undefined>();
   const authenticatedAgent = useAgent({
-    host: "http://localhost:4943",
+    host: import.meta.env.VITE_DFX_NETWORK === "ic" ? "https://ic0.app" : "http://localhost:4943",
   });
 
   useEffect(() => {
-    const host = "http://localhost:4943";
+    const host = import.meta.env.VITE_DFX_NETWORK === "ic" ? "https://ic0.app" : "http://localhost:4943";
     
     HttpAgent.create({ host }).then((agent) => {
-      agent.fetchRootKey().catch((err) => {
-        console.warn("Unable to fetch root key. Check your local replica is running");
-        console.error(err);
-      });
+      if (import.meta.env.VITE_DFX_NETWORK !== "ic") {
+        agent.fetchRootKey().catch((err) => {
+          console.warn("Unable to fetch root key. Check your local replica is running");
+          console.error(err);
+        });
+      }
       setUnauthenticatedAgent(agent);
     });
   }, []);
@@ -31,7 +33,7 @@ function App() {
 
       const actor = Actor.createActor(idlFactory, {
         agent: unauthenticatedAgent,
-        canisterId: "avqkn-guaaa-aaaaa-qaaea-cai",
+        canisterId: import.meta.env.VITE_CANISTER_ID_BACKEND || "avqkn-guaaa-aaaaa-qaaea-cai",
       });
 
       return await actor.greet(name) as string;
@@ -47,7 +49,7 @@ function App() {
       
       const actor = Actor.createActor(idlFactory, {
         agent: unauthenticatedAgent,
-        canisterId: "avqkn-guaaa-aaaaa-qaaea-cai",
+        canisterId: import.meta.env.VITE_CANISTER_ID_BACKEND || "avqkn-guaaa-aaaaa-qaaea-cai",
       });
       
       return await actor.getBTCAddress() as string;
@@ -59,10 +61,14 @@ function App() {
     queryKey: ['greetConnected'],
     queryFn: async () => {
       if (!authenticatedAgent) return 'Wallet not connected';
-      await authenticatedAgent?.fetchRootKey();
+      
+      if (import.meta.env.VITE_DFX_NETWORK !== "ic") {
+        await authenticatedAgent?.fetchRootKey();
+      }
+      
       const actor = Actor.createActor(idlFactory, {
         agent: authenticatedAgent,
-        canisterId: "avqkn-guaaa-aaaaa-qaaea-cai",
+        canisterId: import.meta.env.VITE_CANISTER_ID_BACKEND || "avqkn-guaaa-aaaaa-qaaea-cai",
       });
       
       const principal = await authenticatedAgent.getPrincipal();
