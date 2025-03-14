@@ -53,6 +53,10 @@ echo -e "${YELLOW}Updating .env.production with canister IDs...${NC}"
 sed -i '' "s/VITE_CANISTER_ID_BACKEND=/VITE_CANISTER_ID_BACKEND=${BACKEND_CANISTER_ID}/" .env.production
 sed -i '' "s/VITE_CANISTER_ID_FRONTEND=/VITE_CANISTER_ID_FRONTEND=${FRONTEND_CANISTER_ID}/" .env.production
 
+# #update .env 
+# sed -i '' "s/VITE_CANISTER_ID_BACKEND=/VITE_CANISTER_ID_BACKEND=${BACKEND_CANISTER_ID}/" .env 
+# sed -i '' "s/VITE_CANISTER_ID_FRONTEND=/VITE_CANISTER_ID_FRONTEND=${FRONTEND_CANISTER_ID}/" .env 
+
 echo -e "${GREEN}Deployment process completed!${NC}"
 echo -e "${YELLOW}Don't forget to add cycles to your canisters:${NC}"
 echo "dfx canister --network ic deposit-cycles 1000000000000 ${BACKEND_CANISTER_ID}"

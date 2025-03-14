@@ -33,7 +33,7 @@ function App() {
 
       const actor = Actor.createActor(idlFactory, {
         agent: unauthenticatedAgent,
-        canisterId: import.meta.env.VITE_CANISTER_ID_BACKEND || "avqkn-guaaa-aaaaa-qaaea-cai",
+        canisterId: import.meta.env.VITE_CANISTER_ID_BACKEND!,
       });
 
       return await actor.greet(name) as string;
@@ -49,7 +49,7 @@ function App() {
       
       const actor = Actor.createActor(idlFactory, {
         agent: unauthenticatedAgent,
-        canisterId: import.meta.env.VITE_CANISTER_ID_BACKEND || "avqkn-guaaa-aaaaa-qaaea-cai",
+        canisterId: import.meta.env.VITE_CANISTER_ID_BACKEND!,
       });
       
       return await actor.getBTCAddress() as string;
@@ -75,6 +75,31 @@ function App() {
       console.log(principal.toHex())
       try {
         const response = await actor.greet(principal?.toString() ?? "me");
+        return response as string;
+      } catch (error) {
+        console.error("Error calling greet_no_consent:", error);
+        return `Error: ${error instanceof Error ? error.message : String(error)}`;
+      }
+    },
+    enabled: !!authenticatedAgent,
+  });
+
+  const whoAmIQuery = useQuery({
+    queryKey: ['whoAmI'],
+    queryFn: async () => {
+      if (!authenticatedAgent) return 'Wallet not connected';
+      
+      if (import.meta.env.VITE_DFX_NETWORK !== "ic") {
+        await authenticatedAgent?.fetchRootKey();
+      }
+      
+      const actor = Actor.createActor(idlFactory, {
+        agent: authenticatedAgent,
+        canisterId: import.meta.env.VITE_CANISTER_ID_BACKEND!
+      });
+      
+      try {
+        const response = await actor.whoami();
         return response as string;
       } catch (error) {
         console.error("Error calling greet_no_consent:", error);
@@ -133,6 +158,25 @@ function App() {
               <p className="text-red-500">Error: {(connectedWalletQuery.error as Error).message}</p>
             ) : (
               <p>{connectedWalletQuery.data}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Who Am I</h2>
+          <button
+            onClick={() => whoAmIQuery.refetch()}
+            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+          >
+            Who Am I
+          </button>
+          <div className="p-4 bg-gray-50 rounded-md">
+            {whoAmIQuery.isLoading ? (
+              <p>Loading...</p>
+            ) : whoAmIQuery.isError ? (
+              <p className="text-red-500">Error: {(whoAmIQuery.error as Error).message}</p>
+            ) : (
+              <p>{whoAmIQuery.data}</p>
             )}
           </div>
         </div>
