@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "dfx deploy",
+    "generate:backend": "dfx generate backend",
+    "generate:frontend": "dfx generate frontend",
+    "generate:all": "dfx generate declarations"
   },
   "dependencies": {
     "@dfinity/agent": "^2.1.3",

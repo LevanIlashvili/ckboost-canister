@@ -12,9 +12,19 @@
   }
 }
 
+/* Base styles */
+body {
+  @apply antialiased text-gray-800;
+}
 
+/* Remove default styles from App.tsx */
 main {
-  @apply w-full h-lvh flex justify-center items-center;
+  @apply w-full min-h-screen;
+}
+
+/* Add responsive container */
+.container {
+  @apply mx-auto px-4;
 }
 
 h1 {
