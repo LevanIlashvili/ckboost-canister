@@ -1,0 +1,27 @@
+{
+  "canisters": {
+    "ckboost_backend": {
+      "main": "src/ckboost_backend/main.mo",
+      "type": "motoko"
+    },
+    "ckboost_frontend": {
+      "dependencies": [
+        "ckboost_backend"
+      ],
+      "source": [
+        "src/ckboost_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "ckboost_frontend",
+      "candid": "src/ckboost_frontend/ckboost_frontend.did"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
