@@ -1,19 +1,24 @@
 {
   "canisters": {
-    "ckboost_backend": {
-      "main": "src/ckboost_backend/main.mo",
-      "type": "motoko"
+    "backend": {
+      "main": "src/backend/src/main.mo",
+      "type": "motoko",
+      "declarations": {
+        "output": "src/backend/declarations"
+      }
     },
-    "ckboost_frontend": {
+    "frontend": {
       "dependencies": [
-        "ckboost_backend"
+        "backend"
       ],
       "source": [
-        "src/ckboost_frontend/dist"
+        "src/frontend/dist"
       ],
       "type": "assets",
-      "workspace": "ckboost_frontend",
-      "candid": "src/ckboost_frontend/ckboost_frontend.did"
+      "candid": "src/frontend/frontend.did",
+      "declarations": {
+        "output": "src/frontend/declarations"
+      }
     }
   },
   "defaults": {

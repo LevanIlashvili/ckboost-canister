@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Arial", "sans-serif";
+  --animate-float: float 3s ease-in;
+
+  @keyframes float {
+    to {
+      transform: translateY(-800%);
+      opacity: 0;
+    }
+  }
+}
+
+
+main {
+  @apply w-full h-lvh flex justify-center items-center;
+}
+
+h1 {
+  @apply font-medium text-4xl text-black;
+}
