@@ -1,33 +1,88 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { backend } from '../../src/backend/declarations';
+import { ConnectWallet, useAgent } from "@nfid/identitykit/react"
+import { Actor, HttpAgent } from '@dfinity/agent';
+import { idlFactory } from './declarations';
 
 function App() {
   const [name, setName] = useState<string>('');
-  
-  // Hook for greeting
+  const [unauthenticatedAgent, setUnauthenticatedAgent] = useState<HttpAgent | undefined>();
+  const authenticatedAgent = useAgent({
+    host: "http://localhost:4943",
+  });
+
+  useEffect(() => {
+    const host = "http://localhost:4943";
+    
+    HttpAgent.create({ host }).then((agent) => {
+      agent.fetchRootKey().catch((err) => {
+        console.warn("Unable to fetch root key. Check your local replica is running");
+        console.error(err);
+      });
+      setUnauthenticatedAgent(agent);
+    });
+  }, []);
+
   const greetQuery = useQuery({
     queryKey: ['greet', name],
     queryFn: async () => {
       if (!name) return 'Enter your name';
-      return await backend.greet(name);
-    },
-    enabled: !!name,
-  });
+      if (!unauthenticatedAgent) return 'Agent not initialized';
 
-  // Hook for BTC address
+      const actor = Actor.createActor(idlFactory, {
+        agent: unauthenticatedAgent,
+        canisterId: "avqkn-guaaa-aaaaa-qaaea-cai",
+      });
+
+      return await actor.greet(name) as string;
+    },
+    enabled: !!name && !!unauthenticatedAgent,
+  });
+  
+
   const btcAddressQuery = useQuery({
     queryKey: ['btcAddress'],
     queryFn: async () => {
-      return await backend.getBTCAddress();
+      if (!unauthenticatedAgent) return 'Agent not initialized';
+      
+      const actor = Actor.createActor(idlFactory, {
+        agent: unauthenticatedAgent,
+        canisterId: "avqkn-guaaa-aaaaa-qaaea-cai",
+      });
+      
+      return await actor.getBTCAddress() as string;
     },
+    enabled: !!unauthenticatedAgent,
+  });
+
+  const connectedWalletQuery = useQuery({
+    queryKey: ['greetConnected'],
+    queryFn: async () => {
+      if (!authenticatedAgent) return 'Wallet not connected';
+      await authenticatedAgent?.fetchRootKey();
+      const actor = Actor.createActor(idlFactory, {
+        agent: authenticatedAgent,
+        canisterId: "avqkn-guaaa-aaaaa-qaaea-cai",
+      });
+      
+      const principal = await authenticatedAgent.getPrincipal();
+      console.log(principal.toHex())
+      try {
+        const response = await actor.greet(principal?.toString() ?? "me");
+        return response as string;
+      } catch (error) {
+        console.error("Error calling greet_no_consent:", error);
+        return `Error: ${error instanceof Error ? error.message : String(error)}`;
+      }
+    },
+    enabled: !!authenticatedAgent,
   });
 
   return (
     <main className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
         <h1 className="text-2xl font-bold text-center mb-6">CKBoost</h1>
-        
+        <ConnectWallet />
         {/* Greeting Section */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Greeting</h2>
@@ -57,7 +112,25 @@ function App() {
           </div>
         </div>
         
-        {/* BTC Address Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Connected Wallet Greeting</h2>
+          <button
+            onClick={() => connectedWalletQuery.refetch()}
+            className="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 mb-4"
+          >
+            Greet Connected Wallet
+          </button>
+          <div className="p-4 bg-gray-50 rounded-md">
+            {connectedWalletQuery.isLoading ? (
+              <p>Loading...</p>
+            ) : connectedWalletQuery.isError ? (
+              <p className="text-red-500">Error: {(connectedWalletQuery.error as Error).message}</p>
+            ) : (
+              <p>{connectedWalletQuery.data}</p>
+            )}
+          </div>
+        </div>
+        
         <div>
           <h2 className="text-xl font-semibold mb-4">BTC Address</h2>
           <button

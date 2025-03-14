@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@nfid/identitykit/react/styles.css";
 
 @theme {
   --font-display: "Arial", "sans-serif";
