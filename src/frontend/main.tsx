@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // @ts-ignore
-import { IdentityKitProvider, IdentityKitTheme } from "@nfid/identitykit/react";
+import { IdentityKitProvider, IdentityKitTheme, IdentityKitAuthType } from "@nfid/identitykit/react";
 import { AuthProvider } from "./lib/auth-context";
 
 const queryClient = new QueryClient();
@@ -18,7 +18,7 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <IdentityKitProvider theme={IdentityKitTheme.DARK}>
+    <IdentityKitProvider theme={IdentityKitTheme.DARK} authType={"ACCOUNTS"}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <App />

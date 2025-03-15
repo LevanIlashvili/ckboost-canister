@@ -2,7 +2,6 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "./ui/button";
-import { useState } from "react";
 import { Zap } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Link } from "react-router-dom";
@@ -73,9 +72,7 @@ function ElegantShape({
   );
 }
 
-export function Hero() {
-  const [showForm, setShowForm] = useState(false);
-  
+export function Hero() {  
   const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
     visible: (i: number) => ({

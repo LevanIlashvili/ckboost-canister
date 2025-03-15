@@ -1,11 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "../components/header";
 import { Footer } from "../components/footer";
 import { Button } from "../components/ui/button";
 import { Card, CardHeader, CardContent, CardFooter } from "../components/ui/card";
+import { AccountIdentifier, LedgerCanister } from "@dfinity/ledger-icp";
+import { Principal } from "@dfinity/principal";
 import { 
-  Wallet, 
   Copy, 
   ArrowUpRight, 
   ArrowDownLeft, 
@@ -15,6 +16,26 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../lib/auth-context";
+import { useAgent } from "@nfid/identitykit/react";
+import { Actor, HttpAgent } from "@dfinity/agent";
+import { IDL } from "@dfinity/candid";
+
+// Skeleton component for loading state
+const BalanceSkeleton = () => (
+  <div className="animate-pulse">
+    <div className="h-8 w-24 bg-gray-700/50 rounded mb-1"></div>
+    <div className="h-4 w-16 bg-gray-700/30 rounded"></div>
+  </div>
+);
+
+// Address skeleton component
+const AddressSkeleton = () => (
+  <div className="animate-pulse flex items-center gap-2">
+    <div className="h-4 flex-1 bg-gray-700/50 rounded"></div>
+    <div className="h-8 w-8 rounded-full bg-gray-700/30"></div>
+  </div>
+);
 
 export function WalletPage() {
   const navigate = useNavigate();
@@ -22,26 +43,110 @@ export function WalletPage() {
   const [activeToken, setActiveToken] = useState<"ICP" | "ckBTC">("ICP");
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [icpBalance, setICPBalance] = useState<number>(0);
+  const [ckbtcBalance, setCkBTCBalance] = useState<number>(0);
+  const [isBalanceLoading, setIsBalanceLoading] = useState(true);
   
-  // Mock wallet data for UI display
+  const { user } = useAuth();
+  const agent = useAgent()
+
+  const getICPBalance = async () => {
+    if (!user) {
+      navigate("/");
+      return;
+    }
+    try {
+      if (agent) {
+        const accountIdentifier = AccountIdentifier.fromPrincipal({
+          principal: Principal.fromText(user?.principal || ""),
+        });
+        const ledger = LedgerCanister.create({
+          agent: new HttpAgent({
+            host: "https://icp0.io",
+          }),
+          canisterId: Principal.fromText("ryjl3-tyaaa-aaaaa-aaaba-cai")
+        });
+        const balance = await ledger.accountBalance({
+            accountIdentifier: accountIdentifier,
+            certified: true
+        });
+        const balanceInICP = Number(balance) / 10 ** 8;
+        setICPBalance(balanceInICP);
+      }
+    } catch (error) {
+      console.error("Error fetching ICP balance:", error);
+    }
+  }
+
+  const getCkBTCBalance = async () => {
+    if (!user) {
+      navigate("/");
+      return;
+    }
+    try {
+      if (agent) {
+        const ckBTCLedgerActor = Actor.createActor(
+          ({ IDL }) => {
+            const Account = IDL.Record({
+              owner: IDL.Principal,
+              subaccount: IDL.Opt(IDL.Vec(IDL.Nat8))
+            });
+            return IDL.Service({
+              'icrc1_balance_of': IDL.Func([Account], [IDL.Nat], ['query'])
+            });
+          },
+          {
+            agent: new HttpAgent({
+              host: "https://icp0.io",
+            }),
+            canisterId: Principal.fromText("mxzaz-hqaaa-aaaar-qaada-cai")
+          }
+        );
+        const balanceResponse: BigInt = await ckBTCLedgerActor.icrc1_balance_of({
+          owner: Principal.fromText(user?.principal || ""),
+          subaccount: []
+        }) as BigInt;
+        const balanceInCkBTC = Number(balanceResponse) / 10 ** 8;
+        setCkBTCBalance(balanceInCkBTC);
+      }
+    } catch (error) {
+      console.error("Error fetching ckBTC balance:", error);
+    }
+  }
+
+  const fetchBalances = async () => {
+    setIsBalanceLoading(true);
+    try {
+      await Promise.all([getICPBalance(), getCkBTCBalance()]);
+    } catch (error) {
+      console.error("Error fetching balances:", error);
+    } finally {
+      setIsBalanceLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBalances();
+  }, [user, navigate, agent]);
+
   const mockWalletData = {
     ICP: {
-      balance: "0.5000",
-      address: "abcde-12345...",
-      fullAddress: "abcde-12345-abcde-12345-abcde",
+      balance: icpBalance,
+      address: user?.principal?.slice(0, 9) + "..." + user?.principal?.slice(-10),
+      fullAddress: user?.principal,
       usdValue: 6.12
     },
     ckBTC: {
-      balance: "0.0001",
-      address: "abcde-12345...",
-      fullAddress: "abcde-12345-abcde-12345-abcde",
+      balance: ckbtcBalance,
+      address: user?.principal?.slice(0, 9) + "..." + user?.principal?.slice(-10),
+      fullAddress: user?.principal,
       usdValue: 4.42
     }
   };
 
   const handleRefresh = () => {
     setIsLoading(true);
-    // Simulate refresh
+    fetchBalances();
     setTimeout(() => {
       setIsLoading(false);
     }, 1000);
@@ -59,7 +164,7 @@ export function WalletPage() {
   };
   
   const handleSend = (token: "ICP" | "ckBTC") => {
-    navigate("/send");
+    navigate("/send?token=" + token);
   };
 
   return (
@@ -90,9 +195,9 @@ export function WalletPage() {
                 size="sm"
                 onClick={handleRefresh}
                 className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
-                disabled={isLoading}
+                disabled={isLoading || isBalanceLoading}
               >
-                {isLoading ? (
+                {isLoading || isBalanceLoading ? (
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
                   <RefreshCw className="h-4 w-4 mr-2" />
@@ -131,7 +236,11 @@ export function WalletPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-400">Current Value</p>
-                      <p className="text-sm font-medium text-gray-300">${mockWalletData.ICP.usdValue.toFixed(2)} USD</p>
+                      {isBalanceLoading ? (
+                        <div className="animate-pulse h-4 w-16 bg-gray-700/30 rounded ml-auto"></div>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-300">${mockWalletData.ICP.usdValue.toFixed(2)} USD</p>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
@@ -140,19 +249,29 @@ export function WalletPage() {
                   <div className="flex flex-col space-y-4">
                     <div>
                       <p className="text-sm text-gray-400 mb-1">Balance</p>
-                      <p className="text-3xl font-bold text-white">{mockWalletData.ICP.balance} <span className="text-gray-400 text-lg">ICP</span></p>
+                      {isBalanceLoading ? (
+                        <BalanceSkeleton />
+                      ) : (
+                        <p className="text-3xl font-bold text-white">{mockWalletData.ICP.balance} <span className="text-gray-400 text-lg">ICP</span></p>
+                      )}
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <p className="text-sm text-gray-400 truncate flex-1">{mockWalletData.ICP.address}</p>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 rounded-full text-gray-400 hover:text-white hover:bg-gray-800"
-                        onClick={() => handleCopyAddress(mockWalletData.ICP.fullAddress)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
+                      {isBalanceLoading ? (
+                        <AddressSkeleton />
+                      ) : (
+                        <>
+                          <p className="text-sm text-gray-400 truncate flex-1">{mockWalletData.ICP.address}</p>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 rounded-full text-gray-400 hover:text-white hover:bg-gray-800"
+                            onClick={() => handleCopyAddress(mockWalletData.ICP.fullAddress || "")}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -162,6 +281,7 @@ export function WalletPage() {
                     <Button 
                       className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white"
                       onClick={() => handleReceive("ICP")}
+                      disabled={isBalanceLoading}
                     >
                       <ArrowDownLeft className="h-4 w-4 mr-2" />
                       Receive
@@ -170,6 +290,7 @@ export function WalletPage() {
                       variant="outline"
                       className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
                       onClick={() => handleSend("ICP")}
+                      disabled={isBalanceLoading}
                     >
                       <ArrowUpRight className="h-4 w-4 mr-2" />
                       Send
@@ -207,7 +328,11 @@ export function WalletPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-400">Current Value</p>
-                      <p className="text-sm font-medium text-gray-300">${mockWalletData.ckBTC.usdValue.toFixed(2)} USD</p>
+                      {isBalanceLoading ? (
+                        <div className="animate-pulse h-4 w-16 bg-gray-700/30 rounded ml-auto"></div>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-300">${mockWalletData.ckBTC.usdValue.toFixed(2)} USD</p>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
@@ -216,19 +341,29 @@ export function WalletPage() {
                   <div className="flex flex-col space-y-4">
                     <div>
                       <p className="text-sm text-gray-400 mb-1">Balance</p>
-                      <p className="text-3xl font-bold text-white">{mockWalletData.ckBTC.balance} <span className="text-gray-400 text-lg">ckBTC</span></p>
+                      {isBalanceLoading ? (
+                        <BalanceSkeleton />
+                      ) : (
+                        <p className="text-3xl font-bold text-white">{mockWalletData.ckBTC.balance} <span className="text-gray-400 text-lg">ckBTC</span></p>
+                      )}
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <p className="text-sm text-gray-400 truncate flex-1">{mockWalletData.ckBTC.address}</p>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 rounded-full text-gray-400 hover:text-white hover:bg-gray-800"
-                        onClick={() => handleCopyAddress(mockWalletData.ckBTC.fullAddress)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
+                      {isBalanceLoading ? (
+                        <AddressSkeleton />
+                      ) : (
+                        <>
+                          <p className="text-sm text-gray-400 truncate flex-1">{mockWalletData.ckBTC.address}</p>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 rounded-full text-gray-400 hover:text-white hover:bg-gray-800"
+                            onClick={() => handleCopyAddress(mockWalletData.ckBTC.fullAddress || "")}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -238,6 +373,7 @@ export function WalletPage() {
                     <Button 
                       className="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white"
                       onClick={() => handleReceive("ckBTC")}
+                      disabled={isBalanceLoading}
                     >
                       <ArrowDownLeft className="h-4 w-4 mr-2" />
                       Receive
@@ -246,6 +382,7 @@ export function WalletPage() {
                       variant="outline"
                       className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
                       onClick={() => handleSend("ckBTC")}
+                      disabled={isBalanceLoading}
                     >
                       <ArrowUpRight className="h-4 w-4 mr-2" />
                       Send
@@ -293,29 +430,38 @@ export function WalletPage() {
               </div>
               
               <div className="p-6 flex flex-col items-center">
-                <div className="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 p-6 aspect-square rounded-lg shadow-lg flex-shrink-0 relative group overflow-hidden flex items-center justify-center border border-blue-500/20 mb-6">
-                  <QRCodeSVG 
-                    value={mockWalletData[activeToken].fullAddress}
-                    size={200}
-                    bgColor={"rgba(0,0,0,0)"}
-                    fgColor={"rgba(96, 165, 250, 0.9)"}
-                    level={"M"}
-                    includeMargin={true}
-                  />
-                </div>
+                {isBalanceLoading ? (
+                  <div className="animate-pulse bg-gray-700/30 p-6 aspect-square rounded-lg w-full max-w-[200px] mb-6"></div>
+                ) : (
+                  <div className="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 p-6 aspect-square rounded-lg shadow-lg flex-shrink-0 relative group overflow-hidden flex items-center justify-center border border-blue-500/20 mb-6">
+                    <QRCodeSVG 
+                      value={mockWalletData[activeToken].fullAddress || ""}
+                      size={200}
+                      bgColor={"rgba(0,0,0,0)"}
+                      fgColor={"rgba(96, 165, 250, 0.9)"}
+                      level={"M"}
+                      includeMargin={true}
+                    />
+                  </div>
+                )}
                 
                 <div className="w-full space-y-4">
                   <div>
                     <p className="text-sm text-gray-400 mb-2">Your {activeToken} Address</p>
-                    <div className="bg-gray-900/70 rounded-lg p-3 font-mono text-sm text-gray-300 break-all border border-gray-800/80 shadow-inner">
-                      {mockWalletData[activeToken].fullAddress}
-                    </div>
+                    {isBalanceLoading ? (
+                      <div className="animate-pulse h-12 bg-gray-700/30 rounded"></div>
+                    ) : (
+                      <div className="bg-gray-900/70 rounded-lg p-3 font-mono text-sm text-gray-300 break-all border border-gray-800/80 shadow-inner">
+                        {mockWalletData[activeToken].fullAddress || ""}
+                      </div>
+                    )}
                   </div>
                   
                   <Button 
                     className="w-full"
                     variant={copySuccess ? "primary" : "primary"}
-                    onClick={() => handleCopyAddress(mockWalletData[activeToken].fullAddress)}
+                    onClick={() => handleCopyAddress(mockWalletData[activeToken].fullAddress || "")}
+                    disabled={isBalanceLoading}
                   >
                     {copySuccess ? (
                       <span className="flex items-center gap-2">
