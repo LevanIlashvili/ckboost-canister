@@ -53,6 +53,12 @@ export function Header() {
               <NavLink to="/" active={isHomePage}>
                 Home
               </NavLink>
+              <NavLink to="/wallet" active={location.pathname === "/wallet"}>
+                <div className="flex items-center gap-1">
+                  <Wallet className="h-4 w-4" />
+                  <span>Wallet</span>
+                </div>
+              </NavLink>
               <NavLink to="/boost" active={location.pathname === "/boost"}>
                 <div className="flex items-center gap-1">
                   <Zap className="h-4 w-4" />

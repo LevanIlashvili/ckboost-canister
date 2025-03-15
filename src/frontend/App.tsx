@@ -3,6 +3,8 @@ import { HomePage } from './pages/home';
 import { Dashboard } from './pages/dashboard';
 import { BoostPage } from './pages/boost';
 import { BecomeBoosterPage } from './pages/become-booster';
+import { WalletPage } from './pages/wallet';
+import { SendPage } from './pages/send';
 import { useAuth } from './lib/auth-context';
 import { ScrollToTop } from './components/scroll-to-top';
 import { ScrollToTopButton } from './components/scroll-to-top-button';
@@ -38,6 +40,16 @@ function AppRoutes() {
       <Route path="/become-booster" element={
         <ProtectedRoute>
           <BecomeBoosterPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/wallet" element={
+        <ProtectedRoute>
+          <WalletPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/send" element={
+        <ProtectedRoute>
+          <SendPage />
         </ProtectedRoute>
       } />
     </Routes>
