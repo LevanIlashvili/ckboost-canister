@@ -6,6 +6,7 @@ import { BoostForm } from "./boost-form";
 import { useState } from "react";
 import { Zap } from "lucide-react";
 import { cn } from "../lib/utils";
+import { Link } from "react-router-dom";
 
 function ElegantShape({
   className,
@@ -203,31 +204,28 @@ export function Hero() {
                 exit={{ opacity: 0, y: -30, transition: { duration: 0.5 } }}
                 className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
               >
-                <Button 
-                  size="lg" 
-                  className="min-w-[160px] bg-gradient-to-r from-blue-500 to-indigo-600 hover:opacity-90 shadow-lg shadow-blue-500/20"
-                  onClick={() => setShowForm(true)}
-                >
-                  <span className="flex items-center">
-                    <span>Get Started</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 ml-2">
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="min-w-[160px] border-white/10 text-white/70 hover:bg-white/5 hover:text-white"
-                  onClick={() => {
-                    const howItWorksSection = document.getElementById('how-it-works');
-                    if (howItWorksSection) {
-                      howItWorksSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                >
-                  Learn More
-                </Button>
+                <Link to="/boost">
+                  <Button 
+                    size="lg" 
+                    className="min-w-[160px] bg-gradient-to-r from-blue-500 to-indigo-600 hover:opacity-90 shadow-lg shadow-blue-500/20"
+                  >
+                    <span className="flex items-center">
+                      <span>Get Started</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 ml-2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                  </Button>
+                </Link>
+                <Link to="/become-booster">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="min-w-[160px] border-white/10 text-white/70 hover:bg-white/5 hover:text-white"
+                  >
+                    Become Booster
+                  </Button>
+                </Link>
               </motion.div>
             ) : (
               <motion.div

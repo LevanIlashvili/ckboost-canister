@@ -1,9 +1,15 @@
 import { ConnectWallet, ConnectWalletButtonProps } from "@nfid/identitykit/react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
-import { Wallet } from "lucide-react";
+import { Wallet, Zap, Users } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../lib/auth-context";
 
 export function Header() {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
+
   return (
     <motion.header 
       className="sticky top-0 z-50 w-full border-b border-gray-900/50 bg-black/80 backdrop-blur-md"
@@ -12,7 +18,7 @@ export function Header() {
       transition={{ duration: 0.3 }}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 group">
           <motion.div
             className="flex items-center justify-center rounded-full bg-gradient-blue-purple p-2 glow"
             whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(59, 130, 246, 0.7)" }}
@@ -32,31 +38,50 @@ export function Header() {
               </svg>
           </motion.div>
           <motion.h1 
-            className="text-xl font-bold text-gradient"
+            className="text-xl font-bold text-gradient group-hover:opacity-90 transition-opacity"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.3 }}
           >
             ckBoost
           </motion.h1>
-        </div>
+        </Link>
         <nav className="hidden md:flex items-center space-x-6">
-          {["Features", "How It Works", "Boosters"].map((item) => (
-            <motion.a 
-              key={item}
-              href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
-              className="text-sm font-medium text-gray-400 hover:text-blue-400 transition-colors relative group"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {item}
-              <motion.span 
-                className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 group-hover:w-full transition-all duration-300"
-                initial={{ width: 0 }}
-                whileHover={{ width: "100%" }}
-              />
-            </motion.a>
-          ))}
+          {isAuthenticated ? (
+            // Navigation for authenticated users
+            <>
+              <NavLink to="/" active={isHomePage}>
+                Home
+              </NavLink>
+              <NavLink to="/boost" active={location.pathname === "/boost"}>
+                <div className="flex items-center gap-1">
+                  <Zap className="h-4 w-4" />
+                  <span>Boost</span>
+                </div>
+              </NavLink>
+              <NavLink to="/become-booster" active={location.pathname === "/become-booster"}>
+                <div className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  <span>Become Booster</span>
+                </div>
+              </NavLink>
+            </>
+          ) : (
+            // Navigation for non-authenticated users (homepage sections)
+            isHomePage && (
+              <>
+                <NavLink to="#features" isHashLink active={false}>
+                  Features
+                </NavLink>
+                <NavLink to="#how-it-works" isHashLink active={false}>
+                  How It Works
+                </NavLink>
+                <NavLink to="#booster-network" isHashLink active={false}>
+                  Booster Network
+                </NavLink>
+              </>
+            )
+          )}
         </nav>
         <div className="flex items-center gap-4">
           <ConnectWallet 
@@ -78,5 +103,63 @@ export function Header() {
         </div>
       </div>
     </motion.header>
+  );
+}
+
+// Reusable NavLink component
+interface NavLinkProps {
+  to: string;
+  children: React.ReactNode;
+  active?: boolean;
+  isHashLink?: boolean;
+}
+
+function NavLink({ to, children, active, isHashLink = false }: NavLinkProps) {
+  // Use conditional rendering instead of dynamic component
+  if (isHashLink) {
+    return (
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <a
+          href={to}
+          className={`text-sm font-medium ${active ? 'text-blue-400' : 'text-gray-400'} hover:text-blue-400 transition-colors relative group`}
+          onClick={(e) => {
+            e.preventDefault();
+            const element = document.querySelector(to);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
+        >
+          {children}
+          <motion.span 
+            className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 group-hover:w-full transition-all duration-300"
+            initial={{ width: 0 }}
+            whileHover={{ width: "100%" }}
+          />
+        </a>
+      </motion.div>
+    );
+  }
+  
+  return (
+    <motion.div
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      <Link
+        to={to}
+        className={`text-sm font-medium ${active ? 'text-blue-400' : 'text-gray-400'} hover:text-blue-400 transition-colors relative group`}
+      >
+        {children}
+        <motion.span 
+          className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 group-hover:w-full transition-all duration-300"
+          initial={{ width: 0 }}
+          whileHover={{ width: "100%" }}
+        />
+      </Link>
+    </motion.div>
   );
 } 

@@ -1,45 +1,14 @@
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Users, Zap, Database } from "lucide-react";
 import { Button } from "./ui/button";
+import { Link } from "react-router-dom";
 
-const boosters = [
-  {
-    id: "1",
-    name: "FastBoost",
-    ckbtcBalance: 25.45,
-    totalBoosted: 156.78,
-    feePercentage: 0.5,
-    averageTime: "2 min",
-    status: "ACTIVE",
-  },
-  {
-    id: "2",
-    name: "QuickSwap",
-    ckbtcBalance: 18.32,
-    totalBoosted: 98.45,
-    feePercentage: 0.4,
-    averageTime: "3 min",
-    status: "ACTIVE",
-  },
-  {
-    id: "3",
-    name: "ICPBooster",
-    ckbtcBalance: 32.67,
-    totalBoosted: 203.12,
-    feePercentage: 0.6,
-    averageTime: "1.5 min",
-    status: "ACTIVE",
-  },
-  {
-    id: "4",
-    name: "CryptoAccel",
-    ckbtcBalance: 15.89,
-    totalBoosted: 87.34,
-    feePercentage: 0.45,
-    averageTime: "2.5 min",
-    status: "ACTIVE",
-  },
-];
+// Calculate global statistics from the data
+const boosterStats = {
+  totalBoosters: 24,
+  totalBoosts: 19903,
+  totalVolume: 859.19,
+};
 
 const container = {
   hidden: { opacity: 0 },
@@ -56,9 +25,9 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
-export function Boosters() {
+export function BoosterStats() {
   return (
-    <section id="boosters" className="bg-black py-20 md:py-28 relative overflow-hidden">
+    <section id="booster-network" className="bg-black py-20 md:py-28 relative overflow-hidden">
       {/* Animated gradient background */}
       <div className="absolute inset-0 bg-gradient-blue-purple bg-gradient-animated opacity-10" />
       
@@ -87,7 +56,7 @@ export function Boosters() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            Active Boosters
+            Booster Network
           </motion.h2>
           <motion.p
             className="mb-12 text-lg text-gray-300"
@@ -95,82 +64,103 @@ export function Boosters() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            These service providers are ready to boost your BTC to ckBTC conversion.
+            Our global network of boosters is ready to accelerate your BTC to ckBTC conversion.
           </motion.p>
         </div>
         
+        {/* Statistics Grid */}
         <motion.div
-          className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid grid-cols-1 gap-8 sm:grid-cols-3 max-w-4xl mx-auto mb-16"
           variants={container}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
         >
-          {boosters.map((booster, index) => (
-            <motion.div key={index} variants={item}>
-              <Card 
-                isHoverable 
-                variant="bordered" 
-                className="bg-glass hover-lift card-hover"
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-white">
-                    <span>{booster.name}</span>
-                    <span className="inline-flex items-center rounded-full bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-400 border border-green-800">
-                      Active
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {[
-                      { label: "ckBTC Balance:", value: `₿ ${booster.ckbtcBalance.toFixed(2)}` },
-                      { label: "Total Boosted:", value: `₿ ${booster.totalBoosted.toFixed(2)}` },
-                      { label: "Fee:", value: `${booster.feePercentage}%` },
-                      { label: "Avg. Time:", value: booster.averageTime }
-                    ].map((item, i) => (
-                      <div key={i} className="flex justify-between">
-                        <span className="text-sm text-gray-400">{item.label}</span>
-                        <span className="font-medium text-white">{item.value}</span>
-                      </div>
-                    ))}
-                    <div className="pt-4">
-                      <motion.div
-                        whileHover={{ 
-                          boxShadow: "0 0 20px rgba(147, 51, 234, 0.5)"
-                        }}
-                      >
-                        <Button 
-                          className="w-full bg-gradient-blue-purple hover:opacity-90 glow-purple hover-lift"
-                        >
-                          Select Booster
-                        </Button>
-                      </motion.div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+          <StatCard 
+            title="Active Boosters" 
+            value={boosterStats.totalBoosters.toString()} 
+            icon={<Users className="h-8 w-8 text-blue-400" />}
+            description="Service providers in our network"
+          />
+          <StatCard 
+            title="Total Boosts" 
+            value={boosterStats.totalBoosts.toLocaleString()} 
+            icon={<Zap className="h-8 w-8 text-purple-400" />}
+            description="Successful conversions completed"
+          />
+          <StatCard 
+            title="Volume Boosted" 
+            value={`₿ ${boosterStats.totalVolume.toFixed(2)}`} 
+            icon={<Bitcoin className="h-8 w-8 text-orange-400" />}
+            description="Total Bitcoin processed"
+          />
         </motion.div>
         
-        <div className="mt-12 text-center">
+        <div className="text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
           >
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="border-gray-800 text-gray-300 hover:bg-gray-900 hover-lift glow-border"
-            >
-              Become a Booster
-            </Button>
+            <Link to="/become-booster">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="border-gray-800 text-gray-300 hover:bg-gray-900 hover-lift glow-border"
+              >
+                Become a Booster
+              </Button>
+            </Link>
           </motion.div>
         </div>
       </div>
     </section>
+  );
+}
+
+// Stat card component
+function StatCard({ 
+  title, 
+  value, 
+  icon,
+  description
+}: { 
+  title: string; 
+  value: string; 
+  icon: React.ReactNode;
+  description: string;
+}) {
+  return (
+    <motion.div variants={item} className="relative">
+      <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl p-6 h-full hover:border-blue-900/50 transition-all duration-300 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="p-3 rounded-full bg-gray-800/80 border border-gray-700">
+            {icon}
+          </div>
+        </div>
+        <h3 className="text-lg font-medium text-gray-300 mb-1">{title}</h3>
+        <div className="text-3xl font-bold text-white mb-2">{value}</div>
+        <p className="text-sm text-gray-400">{description}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+// Bitcoin icon component
+function Bitcoin({ className }: { className?: string }) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m3.94.694-.347 1.969M7.116 5.251l-1.256-.221m6.489 2.145 2.696-3.32" />
+    </svg>
   );
 } 

@@ -36,7 +36,7 @@ const steps = [
   },
   {
     number: "05",
-    title: "Conversion Completes",
+    title: "Finish",
     description: "When the original BTC to ckBTC conversion completes, the Booster receives the ckBTC.",
     icon: <Clock className="h-6 w-6" />
   },
