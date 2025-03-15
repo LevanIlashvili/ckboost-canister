@@ -280,16 +280,38 @@ export function BoostPage() {
                           <div className="grid grid-cols-1 md:grid-cols-5 gap-5 items-start">
                             {/* QR Code */}
                             <div className="md:col-span-2">
-                              <div className="bg-white p-3 rounded-xl shadow-lg flex-shrink-0 relative group overflow-hidden">
-                                <QRCodeSVG 
-                                  value={btcAddress}
-                                  size={160}
-                                  bgColor={"#ffffff"}
-                                  fgColor={"#000000"}
-                                  level={"L"}
-                                  includeMargin={false}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/80 to-indigo-600/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl">
+                              <div className="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 p-6 aspect-square rounded-lg shadow-lg flex-shrink-0 relative group overflow-hidden flex items-center justify-center border border-blue-500/20">
+                                <div className="relative">
+                                  {/* Bitcoin logo overlay in the center of QR code */}
+                                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                    <div className="bg-gradient-to-br from-orange-500 to-yellow-500 p-2 rounded-full shadow-lg">
+                                      <Bitcoin className="h-8 w-8 text-white" />
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="rounded-lg bg-gradient-to-br from-blue-500/5 to-indigo-500/5 backdrop-blur-sm">
+                                    <QRCodeSVG 
+                                      value={btcAddress}
+                                      size={200}
+                                      bgColor={"rgba(0,0,0,0)"}
+                                      fgColor={"rgba(96, 165, 250, 0.9)"}
+                                      level={"M"}
+                                      includeMargin={true}
+                                      imageSettings={{
+                                        src: "",
+                                        height: 32,
+                                        width: 32,
+                                        excavate: true,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                                
+                                {/* Subtle animated gradient overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-indigo-600/5 pointer-events-none"></div>
+                                
+                                {/* Hover effect */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/80 to-indigo-600/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-lg">
                                   <p className="text-white text-sm font-medium px-4 text-center">
                                     Scan with your Bitcoin wallet app
                                   </p>
