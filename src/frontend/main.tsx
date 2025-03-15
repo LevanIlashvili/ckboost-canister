@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // @ts-ignore
-import { IdentityKitProvider } from "@nfid/identitykit/react";
+import { IdentityKitProvider, IdentityKitTheme } from "@nfid/identitykit/react";
 const queryClient = new QueryClient();
 
 
@@ -16,7 +16,7 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <IdentityKitProvider>
+    <IdentityKitProvider theme={IdentityKitTheme.DARK}>
       <QueryClientProvider client={queryClient}>
         <App />
       </QueryClientProvider>
