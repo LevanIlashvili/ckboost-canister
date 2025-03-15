@@ -19,7 +19,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
 import { useAgent } from "@nfid/identitykit/react";
 import { Actor, HttpAgent } from "@dfinity/agent";
-import { IDL } from "@dfinity/candid";
 
 // Skeleton component for loading state
 const BalanceSkeleton = () => (
