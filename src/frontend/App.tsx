@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { HomePage } from './pages/home';
 import { Dashboard } from './pages/dashboard';
 import { BoostPage } from './pages/boost';
-import { BecomeBoosterPage } from './pages/become-booster';
+import { BoostLPPage } from './pages/boost-lp';
 import { WalletPage } from './pages/wallet';
 import { SendPage } from './pages/send';
 import { useAuth } from './lib/auth-context';
@@ -37,9 +37,9 @@ function AppRoutes() {
           <BoostPage />
         </ProtectedRoute>
       } />
-      <Route path="/become-booster" element={
+      <Route path="/boost-lp" element={
         <ProtectedRoute>
-          <BecomeBoosterPage />
+          <BoostLPPage />
         </ProtectedRoute>
       } />
       <Route path="/wallet" element={

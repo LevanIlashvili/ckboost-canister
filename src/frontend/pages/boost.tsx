@@ -197,7 +197,7 @@ export function BoostPage() {
                   <p className="text-sm text-amber-200">
                     The system will match you with the best Boost Provider for your chosen fee. 
                     If no provider is found, your transaction will be processed through the standard 
-                    ckBTC minting process (approximately 1 hour).
+                    ckBTC minting process (approximately 2 hours).
                   </p>
                 </motion.div>
 

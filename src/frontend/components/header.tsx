@@ -65,10 +65,10 @@ export function Header() {
                   <span>Boost</span>
                 </div>
               </NavLink>
-              <NavLink to="/become-booster" active={location.pathname === "/become-booster"}>
+              <NavLink to="/boost-lp" active={location.pathname === "/boost-lp"}>
                 <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  <span>Become Booster</span>
+                  <Zap className="h-4 w-4" />
+                  <span>Become Provider</span>
                 </div>
               </NavLink>
             </>

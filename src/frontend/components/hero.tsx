@@ -211,13 +211,13 @@ export function Hero() {
                     </span>
                   </Button>
                 </Link>
-                <Link to="/become-booster">
+                <Link to="/boost-lp">
                   <Button 
-                    variant="outline" 
                     size="lg" 
-                    className="min-w-[160px] border-white/10 text-white/70 hover:bg-white/5 hover:text-white"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-600/20 hover-lift"
                   >
-                    Become Booster
+                    <Zap className="h-4 w-4 mr-2" />
+                    Become a Booster
                   </Button>
                 </Link>
               </motion.div>
@@ -257,7 +257,7 @@ export function Hero() {
               },
               { 
                 label: "Average Boost Time", 
-                value: "3.5 min",
+                value: "15 min",
                 icon: (
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-blue-400">
                     <circle cx="12" cy="12" r="10" />

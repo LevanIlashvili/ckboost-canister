@@ -103,7 +103,7 @@ export function BoosterStats() {
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
           >
-            <Link to="/become-booster">
+            <Link to="/boost-lp">
               <Button 
                 variant="outline" 
                 size="lg" 
