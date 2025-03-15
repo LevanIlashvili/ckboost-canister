@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Users, Zap, Database } from "lucide-react";
+import { Users, Zap } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 

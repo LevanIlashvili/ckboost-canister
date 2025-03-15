@@ -2,7 +2,6 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "./ui/button";
-import { BoostForm } from "./boost-form";
 import { useState } from "react";
 import { Zap } from "lucide-react";
 import { cn } from "../lib/utils";
@@ -193,9 +192,7 @@ export function Hero() {
             </p>
           </motion.div>
           
-          {/* Buttons or Form */}
           <AnimatePresence>
-            {!showForm ? (
               <motion.div
                 custom={3}
                 variants={fadeUpVariants}
@@ -227,17 +224,7 @@ export function Hero() {
                   </Button>
                 </Link>
               </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -30 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md mb-16"
-              >
-                <BoostForm />
-              </motion.div>
-            )}
+            
           </AnimatePresence>
           
 
@@ -302,7 +289,6 @@ export function Hero() {
         </div>
       </div>
       
-      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/80 pointer-events-none" />
     </section>
   );
