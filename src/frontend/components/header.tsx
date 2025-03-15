@@ -1,7 +1,7 @@
 import { ConnectWallet, ConnectWalletButtonProps } from "@nfid/identitykit/react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
-import { Wallet, Zap, Users } from "lucide-react";
+import { Wallet, Zap, Landmark } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
 
@@ -67,8 +67,8 @@ export function Header() {
               </NavLink>
               <NavLink to="/boost-lp" active={location.pathname === "/boost-lp"}>
                 <div className="flex items-center gap-1">
-                  <Zap className="h-4 w-4" />
-                  <span>Become Provider</span>
+                  <Landmark className="h-4 w-4" />
+                  <span>Boost LP</span>
                 </div>
               </NavLink>
             </>

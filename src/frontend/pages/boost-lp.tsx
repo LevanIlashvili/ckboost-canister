@@ -11,11 +11,9 @@ import { Actor, HttpAgent } from "@dfinity/agent";
 import { useAuth } from "../lib/auth-context";
 import { useAgent } from "@nfid/identitykit/react";
 import { 
-  Wallet, 
   Plus, 
   Trash2, 
   Info, 
-  ArrowRight,
   RefreshCw,
   AlertTriangle
 } from "lucide-react";
