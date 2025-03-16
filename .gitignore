@@ -27,3 +27,5 @@ dist/
 
 .env.*
 canister_ids.json
+
+PROJECT.md

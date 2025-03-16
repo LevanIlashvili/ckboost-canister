@@ -18,6 +18,10 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Slider } from "../components/ui/slider";
 import { QRCodeSVG } from "qrcode.react";
+import { Actor } from "@dfinity/agent";
+import { idlFactory } from "../declarations/backend.did.js";
+import { Principal } from "@dfinity/principal";
+import { useAgent } from "@nfid/identitykit/react";
 
 export function BoostPage() {
   const [btcAmount, setBtcAmount] = useState<string>("");
@@ -27,14 +31,42 @@ export function BoostPage() {
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleRequestAddress = () => {
+  const agent = useAgent();
+  const BACKEND_CANISTER_ID = "75egi-7qaaa-aaaao-qj6ma-cai";
+
+  const handleRequestAddress = async () => {
+    if (!btcAmount || parseFloat(btcAmount) < 0.0001) {
+      alert("Enter a valid BTC amount (minimum 0.0001 BTC)");
+      return;
+    }
+
     setIsLoading(true);
-    // Simulate API call with a delay
-    setTimeout(() => {
-      setBtcAddress("bc1q8c6fshw2dlwun7ekn9qwf37cu2rn755upcp6el");
-      setShowAddress(true);
+    try {
+      const backendActor = Actor.createActor(idlFactory, {
+        agent,
+        canisterId: Principal.fromText(BACKEND_CANISTER_ID)
+      });
+
+      const amountInSatoshis = parseFloat(btcAmount) * 1e8;
+      const result = await backendActor.registerBoostRequest(
+        BigInt(amountInSatoshis),
+        feePercentage
+      );
+
+      if (result && typeof result === 'object' && 'ok' in result) {
+        const okResult = result as { ok: { btcAddress: string[] } };
+        setBtcAddress(okResult.ok.btcAddress[0] || "");
+        setShowAddress(true);
+      } else if (result && typeof result === 'object' && 'err' in result) {
+        const errResult = result as { err: string };
+        alert(errResult.err);
+      }
+    } catch (error) {
+      console.error("Error requesting BTC address:", error);
+      alert("Failed to get BTC address. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleCopyAddress = () => {
