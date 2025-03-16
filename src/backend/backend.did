@@ -47,10 +47,17 @@ type BoosterPoolResult = variant {
   err: text;
 };
 
+type TextResult = variant {
+  ok: text;
+  err: text;
+};
+
 service : {
   // Helper functions
   "ckBTCToSatoshis": (float64) -> (nat);
   "satoshisToCkBTC": (nat) -> (float64);
+  "getCanisterPrincipal": () -> (text) query;
+  "getDirectBTCAddress": () -> (text);
 
   // Original functions
   "greet": (text) -> (text) query;
@@ -59,6 +66,8 @@ service : {
   // Boost request functions
   "registerBoostRequest": (Amount, Fee) -> (BoostRequestResult);
   "updateReceivedBTC": (BoostId, Amount) -> (BoostRequestResult);
+  "getBoostRequestBTCAddress": (BoostId) -> (TextResult);
+  "checkBTCDeposit": (BoostId) -> (BoostRequestResult);
   "getBoostRequest": (BoostId) -> (opt BoostRequest) query;
   "getUserBoostRequests": (principal) -> (vec BoostRequest) query;
   "getAllBoostRequests": () -> (vec BoostRequest) query;

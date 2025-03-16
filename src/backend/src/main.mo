@@ -23,6 +23,88 @@ import Time "mo:base/Time";
 import TrieMap "mo:base/TrieMap";
 
 actor CKBoost {
+  // ckBTC Minter Interface
+  type Account = {
+    owner : Principal;
+    subaccount : ?Blob;
+  };
+
+  type BtcNetwork = {
+    #mainnet;
+    #testnet;
+  };
+
+  type MinterInfo = {
+    btc_network : BtcNetwork;
+    min_confirmations : Nat32;
+    retrieve_btc_min_amount : Nat64;
+    kyt_fee : Nat64;
+  };
+
+  type RetrieveBtcStatus = {
+    #Unknown;
+    #Pending;
+    #Sending;
+    #Submitted : { txid : Text };
+    #Confirmed : { txid : Text };
+    #AmountTooLow;
+    #Expired;
+  };
+
+  type RetrieveBtcError = {
+    #MalformedAddress : Text;
+    #InsufficientFunds : { balance : Nat64 };
+    #AmountTooLow : { min_amount : Nat64 };
+    #InsufficientAllowance : { allowance : Nat64 };
+  };
+
+  type RetrieveBtcOk = {
+    block_index : Nat64;
+  };
+
+  type RetrieveBtcResult = {
+    #Ok : RetrieveBtcOk;
+    #Err : RetrieveBtcError;
+  };
+
+  type UpdateBalanceError = {
+    #GenericError : { error_message : Text; error_code : Nat64 };
+    #TemporarilyUnavailable : Text;
+    #AlreadyProcessing;
+    #NoNewUtxos : { required_confirmations : Nat32; current_confirmations : ?Nat32 };
+  };
+
+  type Utxo = {
+    height : Nat32;
+    value : Nat64;
+    outpoint : { txid : Blob; vout : Nat32 };
+  };
+
+  type UpdateBalanceOk = {
+    block_index : Nat64;
+    amount : Nat64;
+    utxos : [Utxo];
+  };
+
+  type UpdateBalanceResult = {
+    #Ok : UpdateBalanceOk;
+    #Err : UpdateBalanceError;
+  };
+
+  type CkBtcMinterInterface = actor {
+    get_btc_address : shared ({owner: ?Principal; subaccount: ?Blob}) -> async Text;
+    update_balance : shared ({owner: ?Principal; subaccount: ?Blob}) -> async UpdateBalanceResult;
+    get_minter_info : shared query () -> async MinterInfo;
+    retrieve_btc : shared (address : Text, amount : Nat64) -> async RetrieveBtcResult;
+    retrieve_btc_status : shared query (block_index : Nat64) -> async RetrieveBtcStatus;
+  };
+
+  // Constants
+  let CKBTC_MINTER_CANISTER_ID : Text = "mqygn-kiaaa-aaaar-qaadq-cai"; // Mainnet ckBTC Minter
+  let ckBTCMinter : CkBtcMinterInterface = actor(CKBTC_MINTER_CANISTER_ID);
+
+  let CANISTER_PRINCIPAL: Text = "75egi-7qaaa-aaaao-qj6ma-cai";  
+  
   // Types
   public type BoostId = Nat;
   public type BoosterPoolId = Nat;
@@ -173,6 +255,85 @@ actor CKBoost {
     return Principal.toText(caller);
   };
   
+  // Get a BTC address for a boost request from the ckBTC minter
+  private func getBTCAddress(subaccount: Blob) : async Text {
+    try {
+      let canisterPrincipal = Principal.fromText(CANISTER_PRINCIPAL);
+      
+      Debug.print("Calling ckBTC minter with principal: " # Principal.toText(canisterPrincipal));
+      
+      // Create the record structure exactly as expected by the minter
+      // The signature is: get_btc_address: (record {owner:opt principal; subaccount:opt vec nat8}) → (text)
+      let args = {
+        owner = ?canisterPrincipal;
+        subaccount = ?subaccount;  // Now we're using the provided subaccount
+      };
+      
+      let btcAddress = await ckBTCMinter.get_btc_address(args);
+      
+      Debug.print("Successfully got BTC address: " # btcAddress);
+      return btcAddress;
+    } catch (e) {
+      Debug.print("Error in getBTCAddress: " # Error.message(e));
+      throw Error.reject("Error getting BTC address: " # Error.message(e));
+    };
+  };
+  
+  // Check for BTC deposits to a specific address
+  public func checkBTCDeposit(boostId: BoostId) : async Result.Result<BoostRequest, Text> {
+    switch (boostRequests.get(boostId)) {
+      case (null) {
+        return #err("Boost request not found");
+      };
+      case (?request) {
+        try {
+          // Use this canister's principal as the owner, and the request's subaccount
+          let canisterPrincipal = Principal.fromText(CANISTER_PRINCIPAL);
+          
+          Debug.print("Checking BTC deposits for boost request " # Nat.toText(boostId));
+          
+          // Create the record structure exactly as expected by the minter
+          // The signature is: update_balance: (record {owner:opt principal; subaccount:opt vec nat8}) → (UpdateBalanceResult)
+          let args = {
+            owner = ?canisterPrincipal;
+            subaccount = ?request.subaccount;  // Now we're using the request's subaccount
+          };
+          
+          let updateResult = await ckBTCMinter.update_balance(args);
+          
+          switch (updateResult) {
+            case (#Ok(result)) {
+              Debug.print("Found deposits: " # Nat64.toText(result.amount) # " satoshis");
+              // Update the received BTC amount
+              let updatedRequest = await updateReceivedBTC(boostId, Nat64.toNat(result.amount));
+              return updatedRequest;
+            };
+            case (#Err(error)) {
+              switch (error) {
+                case (#NoNewUtxos(_)) {
+                  Debug.print("No new deposits detected for boost request " # Nat.toText(boostId));
+                  return #err("No new deposits detected");
+                };
+                case (#AlreadyProcessing) {
+                  return #err("Already processing deposits");
+                };
+                case (#TemporarilyUnavailable(msg)) {
+                  return #err("Service temporarily unavailable: " # msg);
+                };
+                case (#GenericError({ error_message; error_code })) {
+                  return #err("Error checking deposits: " # error_message);
+                };
+              };
+            };
+          };
+        } catch (e) {
+          Debug.print("Error checking deposits: " # Error.message(e));
+          return #err("Error checking deposits: " # Error.message(e));
+        };
+      };
+    };
+  };
+  
   // Register a new boost request -  Amount is in satoshis (1 ckBTC = 100,000,000 satoshis)
   public shared(msg) func registerBoostRequest(amount: Amount, fee: Fee) : async Result.Result<BoostRequest, Text> {
     let caller = msg.caller;
@@ -191,7 +352,8 @@ actor CKBoost {
     let now = Time.now();
     let subaccount = generateSubaccount(caller, boostId);
     
-    let boostRequest : BoostRequest = {
+    // Create the initial boost request without BTC address
+    let initialBoostRequest : BoostRequest = {
       id = boostId;
       owner = caller;
       amount = amount;
@@ -205,9 +367,35 @@ actor CKBoost {
       updatedAt = now;
     };
     
-    boostRequests.put(boostId, boostRequest);
+    boostRequests.put(boostId, initialBoostRequest);
     
-    return #ok(boostRequest);
+    // Get BTC address from ckBTC minter
+    try {
+      Debug.print("Getting BTC address for boost request " # Nat.toText(boostId));
+      let btcAddress = await getBTCAddress(subaccount);
+      Debug.print("Got BTC address: " # btcAddress);
+      
+      // Update the boost request with the BTC address
+      let updatedRequest = await updateBTCAddress(boostId, btcAddress);
+      
+      // Note: Result variants in Motoko are case-sensitive
+      // The updateBTCAddress function returns #ok and #err (lowercase)
+      switch (updatedRequest) {
+        case (#ok(request)) {
+          Debug.print("Successfully updated boost request with BTC address");
+          return #ok(request);
+        };
+        case (#err(error)) {
+          Debug.print("Error updating boost request with BTC address: " # error);
+          return #err(error);
+        };
+      };
+    } catch (e) {
+      // Return the initial boost request even if we couldn't get a BTC address
+      // The address can be fetched later
+      Debug.print("Error getting BTC address during registration: " # Error.message(e));
+      return #ok(initialBoostRequest);
+    };
   };
   
   // Update received BTC amount for a boost request
@@ -239,8 +427,11 @@ actor CKBoost {
   
   // Update BTC address for a boost request
   private func updateBTCAddress(boostId: BoostId, btcAddress: Text) : async Result.Result<BoostRequest, Text> {
+    Debug.print("Updating BTC address for boost request " # Nat.toText(boostId) # " to " # btcAddress);
+    
     switch (boostRequests.get(boostId)) {
       case (null) {
+        Debug.print("Boost request not found: " # Nat.toText(boostId));
         return #err("Boost request not found");
       };
       case (?request) {
@@ -259,7 +450,37 @@ actor CKBoost {
         };
         
         boostRequests.put(boostId, updatedRequest);
+        Debug.print("Successfully updated boost request with BTC address");
         return #ok(updatedRequest);
+      };
+    };
+  };
+  
+  // Get BTC address for an existing boost request
+  public func getBoostRequestBTCAddress(boostId: BoostId) : async Result.Result<Text, Text> {
+    switch (boostRequests.get(boostId)) {
+      case (null) {
+        return #err("Boost request not found");
+      };
+      case (?request) {
+        switch (request.btcAddress) {
+          case (null) {
+            // If the BTC address is not set, get it from the ckBTC minter
+            try {
+              let btcAddress = await getBTCAddress(request.subaccount);
+              
+              // Update the boost request with the BTC address
+              ignore await updateBTCAddress(boostId, btcAddress);
+              
+              return #ok(btcAddress);
+            } catch (e) {
+              return #err(Error.message(e));
+            };
+          };
+          case (?address) {
+            return #ok(address);
+          };
+        };
       };
     };
   };
@@ -339,5 +560,28 @@ actor CKBoost {
   // Get all booster pools
   public query func getAllBoosterPools() : async [BoosterPool] {
     Iter.toArray(Iter.map<(BoosterPoolId, BoosterPool), BoosterPool>(boosterPools.entries(), func ((_, v) : (BoosterPoolId, BoosterPool)) : BoosterPool { v }))
+  };
+
+  public query func getCanisterPrincipal() : async Text {
+    return CANISTER_PRINCIPAL;
+  };
+
+  // Direct method to get a BTC address for testing
+  public func getDirectBTCAddress() : async Text {
+    let canisterPrincipal = Principal.fromText(CANISTER_PRINCIPAL);
+    
+    Debug.print("Directly calling ckBTC minter with principal: " # Principal.toText(canisterPrincipal));
+    
+    // Create the record structure exactly as expected by the minter
+    // The signature is: get_btc_address: (record {owner:opt principal; subaccount:opt vec nat8}) → (text)
+    let args = {
+      owner = ?canisterPrincipal;
+      subaccount = null;
+    };
+    
+    let btcAddress = await ckBTCMinter.get_btc_address(args);
+    
+    Debug.print("Successfully got direct BTC address: " # btcAddress);
+    return btcAddress;
   };
 };
