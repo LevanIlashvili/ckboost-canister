@@ -485,7 +485,7 @@ export function SendPage() {
                       <div className="flex items-center gap-2">
                         <div className="h-5 w-5 rounded-full bg-gradient-to-br from-purple-500/20 to-purple-600/20 flex items-center justify-center">
                           <img 
-                            src="https://cryptologos.cc/logos/internet-computer-icp-logo.png" 
+                            src="/internet-computer-icp-logo.png" 
                             alt="ICP Logo" 
                             className="h-3 w-3"
                           />

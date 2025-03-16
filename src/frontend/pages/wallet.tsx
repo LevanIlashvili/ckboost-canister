@@ -223,7 +223,7 @@ export function WalletPage() {
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500/20 to-purple-600/20 flex items-center justify-center border border-purple-500/30">
                         <img 
-                          src="https://cryptologos.cc/logos/internet-computer-icp-logo.png" 
+                          src="/internet-computer-icp-logo.png" 
                           alt="ICP Logo" 
                           className="h-6 w-6"
                         />
@@ -315,7 +315,7 @@ export function WalletPage() {
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/20 flex items-center justify-center border border-orange-500/30">
                         <img 
-                          src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" 
+                          src="/bitcoin-btc-logo.png" 
                           alt="ckBTC Logo" 
                           className="h-6 w-6"
                         />
@@ -411,9 +411,9 @@ export function WalletPage() {
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <div className={`h-6 w-6 rounded-full ${activeToken === "ICP" ? "bg-purple-500/20" : "bg-orange-500/20"} flex items-center justify-center`}>
                     {activeToken === "ICP" ? (
-                      <img src="https://cryptologos.cc/logos/internet-computer-icp-logo.png" alt="ICP Logo" className="h-4 w-4" />
+                      <img src="/internet-computer-icp-logo.png" alt="ICP Logo" className="h-4 w-4" />
                     ) : (
-                      <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="ckBTC Logo" className="h-4 w-4" />
+                      <img src="/bitcoin-btc-logo.png" alt="ckBTC Logo" className="h-4 w-4" />
                     )}
                   </div>
                   Receive {activeToken}

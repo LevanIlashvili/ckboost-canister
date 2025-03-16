@@ -14,13 +14,11 @@ import {
   Plus, 
   Info, 
   RefreshCw,
-  AlertTriangle,
   HelpCircle,
   X,
-  ArrowDownLeft,
-  Bitcoin,
-  Wallet,
-  Coins
+  ArrowDownLeft,  
+  Coins,
+  AlertTriangle
 } from "lucide-react";
 import { idlFactory } from "../declarations/backend.did.js";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
@@ -409,12 +407,21 @@ export function BoostLPPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 text-center">
-              Boost Liquidity Pool
-            </h1>
-            <p className="text-gray-400 text-center mt-2">
-              Provide liquidity to the ckBTC pool and earn fees
-            </p>
+            <div className="flex flex-col items-center">
+              <div className="mb-4 flex items-center justify-center">
+                <img 
+                  src="/internet-computer-icp-logo.png" 
+                  alt="Internet Computer Logo" 
+                  className="h-12 w-12 mb-2"
+                />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 text-center">
+                Boost Liquidity Pool
+              </h1>
+              <p className="text-gray-400 text-center mt-2">
+                Provide liquidity to the ckBTC pool and earn fees
+              </p>
+            </div>
           </motion.div>
 
           {/* Success Message */}
@@ -488,7 +495,7 @@ export function BoostLPPage() {
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/20 flex items-center justify-center border border-orange-500/30">
                     <img 
-                      src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" 
+                      src="/bitcoin-btc-logo.png" 
                       alt="ckBTC Logo" 
                       className="h-6 w-6"
                     />
@@ -551,7 +558,11 @@ export function BoostLPPage() {
                 ) : boosterPools.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="mx-auto w-16 h-16 rounded-full bg-blue-900/20 flex items-center justify-center mb-4">
-                      <Wallet className="h-8 w-8 text-blue-400" />
+                      <img 
+                        src="/bitcoin-btc-logo.png" 
+                        alt="ckBTC Logo" 
+                        className="h-8 w-8"
+                      />
                     </div>
                     <p className="text-gray-400">You don't have any booster pools yet.</p>
                     <p className="text-gray-500 text-sm mt-2">Create one below to start boosting.</p>
@@ -564,7 +575,11 @@ export function BoostLPPage() {
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
                               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center border border-blue-500/30">
-                                <Bitcoin className="h-5 w-5 text-blue-400" />
+                                <img 
+                                  src="/bitcoin-btc-logo.png" 
+                                  alt="ckBTC Logo" 
+                                  className="h-5 w-5"
+                                />
                               </div>
                               <div>
                                 <p className="text-lg font-medium text-white">Pool #{pool.id.toString()}</p>
@@ -728,7 +743,7 @@ export function BoostLPPage() {
               <div className="flex items-center justify-between p-4 border-b border-gray-700">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <div className="h-6 w-6 rounded-full bg-orange-500/20 flex items-center justify-center">
-                    <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="ckBTC Logo" className="h-4 w-4" />
+                    <img src="/bitcoin-btc-logo.png" alt="ckBTC Logo" className="h-4 w-4" />
                   </div>
                   Deposit ckBTC to Pool #{selectedPool}
                 </h3>
