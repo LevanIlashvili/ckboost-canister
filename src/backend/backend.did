@@ -1,4 +1,38 @@
+type BoostId = nat;
+type Subaccount = blob;
+type Amount = nat;
+type Timestamp = int;
+type APR = float64;
+
+type BoostStatus = variant {
+  pending;
+  active;
+  completed;
+  cancelled;
+};
+
+type BoostRequest = record {
+  id: BoostId;
+  owner: principal;
+  amount: Amount;
+  apr: APR;
+  subaccount: Subaccount;
+  status: BoostStatus;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};
+
+type Result = variant {
+  ok: BoostRequest;
+  err: text;
+};
+
 service : {
     "greet": (text) -> (text) query;
     "getBTCAddress": () -> (text) query;
+    "whoami": () -> (text);
+    "registerBoostRequest": (Amount, APR) -> (Result);
+    "getBoostRequest": (BoostId) -> (opt BoostRequest) query;
+    "getUserBoostRequests": (principal) -> (vec BoostRequest) query;
+    "getAllBoostRequests": () -> (vec BoostRequest) query;
 }

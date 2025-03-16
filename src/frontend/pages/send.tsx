@@ -10,7 +10,6 @@ import {
   AlertTriangle, 
   Check,
   Bitcoin,
-  Wallet,
   RefreshCw
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -35,24 +34,24 @@ function fromHexString(hex: string): Uint8Array {
 // ICP Ledger IDL Factory
 const icpLedgerIDLFactory = ({ IDL }: { IDL: any }) => {
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
-  const Duration = IDL.Record({ 'secs': IDL.Nat64, 'nanos': IDL.Nat32 });
-  const ArchiveOptions = IDL.Record({
-    'num_blocks_to_archive': IDL.Nat64,
-    'trigger_threshold': IDL.Nat64,
-    'max_message_size_bytes': IDL.Opt(IDL.Nat64),
-    'cycles_for_archive_creation': IDL.Opt(IDL.Nat64),
-    'node_max_memory_size_bytes': IDL.Opt(IDL.Nat64),
-    'controller_id': IDL.Principal,
-  });
+  // const Duration = IDL.Record({ 'secs': IDL.Nat64, 'nanos': IDL.Nat32 });
+  // const ArchiveOptions = IDL.Record({
+  //   'num_blocks_to_archive': IDL.Nat64,
+  //   'trigger_threshold': IDL.Nat64,
+  //   'max_message_size_bytes': IDL.Opt(IDL.Nat64),
+  //   'cycles_for_archive_creation': IDL.Opt(IDL.Nat64),
+  //   'node_max_memory_size_bytes': IDL.Opt(IDL.Nat64),
+  //   'controller_id': IDL.Principal,
+  // });
   const ICPTs = IDL.Record({ 'e8s': IDL.Nat64 });
-  const LedgerCanisterInitPayload = IDL.Record({
-    'send_whitelist': IDL.Vec(IDL.Principal),
-    'minting_account': AccountIdentifier,
-    'transaction_window': IDL.Opt(Duration),
-    'max_message_size_bytes': IDL.Opt(IDL.Nat64),
-    'archive_options': IDL.Opt(ArchiveOptions),
-    'initial_values': IDL.Vec(IDL.Tuple(AccountIdentifier, ICPTs)),
-  });
+  // const LedgerCanisterInitPayload = IDL.Record({
+  //   'send_whitelist': IDL.Vec(IDL.Principal),
+  //   'minting_account': AccountIdentifier,
+  //   'transaction_window': IDL.Opt(Duration),
+  //   'max_message_size_bytes': IDL.Opt(IDL.Nat64),
+  //   'archive_options': IDL.Opt(ArchiveOptions),
+  //   'initial_values': IDL.Vec(IDL.Tuple(AccountIdentifier, ICPTs)),
+  // });
   const Memo = IDL.Nat64;
   const SubAccount = IDL.Vec(IDL.Nat8);
   const TimeStamp = IDL.Record({ 'timestamp_nanos': IDL.Nat64 });
@@ -246,18 +245,18 @@ export function SendPage() {
     fetchBalances();
   }, [user, navigate, agent]);
   
-  const walletData = {
-    ICP: {
-      balance: icpBalance,
-      address: user?.principal?.slice(0, 9) + "..." + user?.principal?.slice(-10),
-      fullAddress: user?.principal,
-    },
-    ckBTC: {
-      balance: ckbtcBalance,
-      address: user?.principal?.slice(0, 9) + "..." + user?.principal?.slice(-10),
-      fullAddress: user?.principal,
-    }
-  };
+  // const walletData = {
+  //   ICP: {
+  //     balance: icpBalance,
+  //     address: user?.principal?.slice(0, 9) + "..." + user?.principal?.slice(-10),
+  //     fullAddress: user?.principal,
+  //   },
+  //   ckBTC: {
+  //     balance: ckbtcBalance,
+  //     address: user?.principal?.slice(0, 9) + "..." + user?.principal?.slice(-10),
+  //     fullAddress: user?.principal,
+  //   }
+  // };
   
   const handleTokenChange = (newToken: "ICP" | "ckBTC") => {
     setToken(newToken);
