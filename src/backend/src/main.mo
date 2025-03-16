@@ -489,8 +489,8 @@ actor CKBoost {
   public shared(msg) func registerBoosterPool(fee: Fee) : async Result.Result<BoosterPool, Text> {
     let caller = msg.caller;
     
-    if (fee < 0.0 or fee > 1.0) {
-      return #err("Fee must be between 0% and 100%");
+    if (fee < 0.0 or fee > 2.0) {
+      return #err("Fee must be between 0% and 2%");
     };
     
     let poolId = nextBoosterPoolId;
