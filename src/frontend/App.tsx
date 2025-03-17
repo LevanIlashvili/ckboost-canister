@@ -1,156 +1,70 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ConnectWallet, useAgent } from "@nfid/identitykit/react"
-import { Actor, HttpAgent } from '@dfinity/agent';
-import { idlFactory } from './declarations';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HomePage } from './pages/home';
+import { Dashboard } from './pages/dashboard';
+import { BoostPage } from './pages/boost';
+import { BoostLPPage } from './pages/boost-lp';
+import { WalletPage } from './pages/wallet';
+import { SendPage } from './pages/send';
+import { useAuth } from './lib/auth-context';
+import { ScrollToTop } from './components/scroll-to-top';
+import { ScrollToTopButton } from './components/scroll-to-top-button';
+
+// Protected route wrapper component
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  // While checking authentication status, show nothing
+  if (isLoading) return null;
+  
+  // If not authenticated, redirect to homepage
+  if (!isAuthenticated) return <Navigate to="/" replace />;
+  
+  // If authenticated, render the children
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/boost" element={
+        <ProtectedRoute>
+          <BoostPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/boost-lp" element={
+        <ProtectedRoute>
+          <BoostLPPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/wallet" element={
+        <ProtectedRoute>
+          <WalletPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/send" element={
+        <ProtectedRoute>
+          <SendPage />
+        </ProtectedRoute>
+      } />
+    </Routes>
+  );
+}
 
 function App() {
-  const [name, setName] = useState<string>('');
-  const [unauthenticatedAgent, setUnauthenticatedAgent] = useState<HttpAgent | undefined>();
-  const authenticatedAgent = useAgent({
-    host: "http://localhost:4943",
-  });
-
-  useEffect(() => {
-    const host = "http://localhost:4943";
-    
-    HttpAgent.create({ host }).then((agent) => {
-      agent.fetchRootKey().catch((err) => {
-        console.warn("Unable to fetch root key. Check your local replica is running");
-        console.error(err);
-      });
-      setUnauthenticatedAgent(agent);
-    });
-  }, []);
-
-  const greetQuery = useQuery({
-    queryKey: ['greet', name],
-    queryFn: async () => {
-      if (!name) return 'Enter your name';
-      if (!unauthenticatedAgent) return 'Agent not initialized';
-
-      const actor = Actor.createActor(idlFactory, {
-        agent: unauthenticatedAgent,
-        canisterId: "avqkn-guaaa-aaaaa-qaaea-cai",
-      });
-
-      return await actor.greet(name) as string;
-    },
-    enabled: !!name && !!unauthenticatedAgent,
-  });
-  
-
-  const btcAddressQuery = useQuery({
-    queryKey: ['btcAddress'],
-    queryFn: async () => {
-      if (!unauthenticatedAgent) return 'Agent not initialized';
-      
-      const actor = Actor.createActor(idlFactory, {
-        agent: unauthenticatedAgent,
-        canisterId: "avqkn-guaaa-aaaaa-qaaea-cai",
-      });
-      
-      return await actor.getBTCAddress() as string;
-    },
-    enabled: !!unauthenticatedAgent,
-  });
-
-  const connectedWalletQuery = useQuery({
-    queryKey: ['greetConnected'],
-    queryFn: async () => {
-      if (!authenticatedAgent) return 'Wallet not connected';
-      await authenticatedAgent?.fetchRootKey();
-      const actor = Actor.createActor(idlFactory, {
-        agent: authenticatedAgent,
-        canisterId: "avqkn-guaaa-aaaaa-qaaea-cai",
-      });
-      
-      const principal = await authenticatedAgent.getPrincipal();
-      console.log(principal.toHex())
-      try {
-        const response = await actor.greet(principal?.toString() ?? "me");
-        return response as string;
-      } catch (error) {
-        console.error("Error calling greet_no_consent:", error);
-        return `Error: ${error instanceof Error ? error.message : String(error)}`;
-      }
-    },
-    enabled: !!authenticatedAgent,
-  });
-
   return (
-    <main className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-        <h1 className="text-2xl font-bold text-center mb-6">CKBoost</h1>
-        <ConnectWallet />
-        {/* Greeting Section */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Greeting</h2>
-          <div className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onClick={() => greetQuery.refetch()}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Greet
-            </button>
-          </div>
-          <div className="p-4 bg-gray-50 rounded-md">
-            {greetQuery.isLoading ? (
-              <p>Loading...</p>
-            ) : greetQuery.isError ? (
-              <p className="text-red-500">Error: {(greetQuery.error as Error).message}</p>
-            ) : (
-              <p>{greetQuery.data}</p>
-            )}
-          </div>
-        </div>
-        
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Connected Wallet Greeting</h2>
-          <button
-            onClick={() => connectedWalletQuery.refetch()}
-            className="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 mb-4"
-          >
-            Greet Connected Wallet
-          </button>
-          <div className="p-4 bg-gray-50 rounded-md">
-            {connectedWalletQuery.isLoading ? (
-              <p>Loading...</p>
-            ) : connectedWalletQuery.isError ? (
-              <p className="text-red-500">Error: {(connectedWalletQuery.error as Error).message}</p>
-            ) : (
-              <p>{connectedWalletQuery.data}</p>
-            )}
-          </div>
-        </div>
-        
-        <div>
-          <h2 className="text-xl font-semibold mb-4">BTC Address</h2>
-          <button
-            onClick={() => btcAddressQuery.refetch()}
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-          >
-            Get BTC Address
-          </button>
-          <div className="p-4 bg-gray-50 rounded-md break-all">
-            {btcAddressQuery.isLoading ? (
-              <p>Loading...</p>
-            ) : btcAddressQuery.isError ? (
-              <p className="text-red-500">Error: {(btcAddressQuery.error as Error).message}</p>
-            ) : (
-              <p>{btcAddressQuery.data}</p>
-            )}
-          </div>
-        </div>
-      </div>
-    </main>
+    <div className="flex min-h-screen flex-col">
+      <Router>
+        <ScrollToTop />
+        <AppRoutes />
+        <ScrollToTopButton />
+      </Router>
+    </div>
   );
 }
 

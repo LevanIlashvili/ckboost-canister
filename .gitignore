@@ -24,3 +24,8 @@ dist/
 # environment variables
 .env
 *.txt
+
+.env.*
+canister_ids.json
+
+PROJECT.md
